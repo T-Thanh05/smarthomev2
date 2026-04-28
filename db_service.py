@@ -3,10 +3,7 @@ from mysql.connector import pooling
 
 
 db_config = {
-    'host': 'localhost',
-    'user': 'root',
-    'password': 'namthien86892204',
-    'database': 'smart_home'
+
 }
 
 pool: pooling.MySQLConnectionPool = None
