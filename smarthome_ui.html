@@ -1,0 +1,1516 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SmartHome Control Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    /* 
+       DESIGN TOKENS (derived from template)
+     */
+    :root {
+      --bg: #080c14;
+      --bg2: #0d1120;
+      --surface: #111827;
+      --surface2: #1a2236;
+      --border: rgba(255,255,255,0.07);
+      --border2: rgba(255,255,255,0.12);
+      --primary: #3b82f6;
+      --primary-glow: rgba(59,130,246,0.25);
+      --accent: #06b6d4;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --text: #f1f5f9;
+      --text2: #94a3b8;
+      --text3: #4b5b72;
+      --sidebar-w: 240px;
+      --topbar-h: 60px;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --font: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-display: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+      --trans: all 0.2s ease;
+    }
+
+    /* Light theme overrides */
+    :root[data-theme="light"]{
+      --bg:#f6f7ff;
+      --bg2:#eef2ff;
+      --surface:rgba(255,255,255,0.78);
+      --surface2:rgba(255,255,255,0.96);
+      --border:rgba(15,23,42,0.10);
+      --border2:rgba(15,23,42,0.14);
+      --text:#0f172a;
+      --text2:#334155;
+      --text3:#64748b;
+      --primary-glow:rgba(59,130,246,0.18);
+    }
+
+    /* Reset & Base */
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{
+      font-family:var(--font);
+      background:var(--bg);
+      color:var(--text);
+      font-size:14px;
+      line-height:1.6;
+      min-height:100vh;
+      overflow-x:hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
+    button{cursor:pointer;border:none;background:none;font-family:inherit;font-size:inherit}
+    input,select,textarea{font-family:inherit;font-size:inherit}
+    a{text-decoration:none;color:inherit}
+    /* Scrollbar */
+    ::-webkit-scrollbar{width:6px;height:6px}
+    ::-webkit-scrollbar-track{background:var(--bg2)}
+    ::-webkit-scrollbar-thumb{background:var(--surface2);border-radius:3px}
+
+    /* Layout */
+    .app-shell{display:flex;min-height:100vh}
+
+    /* Login */
+    .login-page{
+      position:fixed;inset:0;
+      background:var(--bg);
+      display:flex;align-items:center;justify-content:center;
+      z-index:9999;
+      background-image:
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(59,130,246,0.12), transparent),
+        radial-gradient(ellipse 40% 40% at 80% 80%, rgba(6,182,212,0.07), transparent);
+    }
+    .login-box{
+      width:380px;
+      background:var(--surface);
+      border:1px solid var(--border2);
+      border-radius:20px;
+      padding:40px;
+      box-shadow:0 40px 80px rgba(0,0,0,0.5);
+    }
+    .login-logo{text-align:center;margin-bottom:28px}
+    .login-logo .logo-icon{
+      width:56px;height:56px;
+      font-size:24px;
+      border-radius:14px;
+      margin:0 auto 12px;
+      background:linear-gradient(135deg,var(--primary),var(--accent));
+      display:flex;align-items:center;justify-content:center;
+    }
+    .login-title{font-family:var(--font-display);font-size:26px;font-weight:800;text-align:center;margin-bottom:6px}
+    .login-sub{font-size:13px;color:var(--text2);text-align:center;margin-bottom:28px}
+    .login-form{display:flex;flex-direction:column;gap:18px}
+    .auth-panel{display:none;flex-direction:column;gap:16px}
+    .auth-panel.active{display:flex}
+    .auth-panel-head{display:flex;flex-direction:column;gap:4px}
+    .auth-panel-title{font-size:18px;font-weight:800;color:#fff}
+    .auth-panel-sub{font-size:12px;color:var(--text3);line-height:1.5}
+    .login-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;padding-top:4px}
+    .login-link{font-size:12px;color:var(--primary);font-weight:700}
+    .login-link:hover{opacity:0.9;text-decoration:underline}
+    .form-group{display:flex;flex-direction:column;gap:6px}
+    .form-label{font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.4px}
+    .form-input{
+      background:var(--surface2);
+      border:1px solid var(--border2);
+      border-radius:var(--radius-sm);
+      color:var(--text);
+      padding:9px 12px;
+      width:100%;
+      box-sizing:border-box;
+      transition:var(--trans);
+      outline:none;
+      font-size:13px;
+    }
+    .form-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-glow)}
+    .password-field{position:relative;width:100%}
+    .password-field .form-input{padding-right:44px}
+    .password-toggle{
+      position:absolute;
+      right:10px;
+      top:50%;
+      transform:translateY(-50%);
+      width:28px;
+      height:28px;
+      border-radius:8px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:transparent;
+      color:var(--text3);
+      border:1px solid transparent;
+      font-size:14px;
+      transition:var(--trans);
+    }
+    .password-toggle:hover{
+      color:var(--text);
+      background:rgba(255,255,255,0.04);
+      border-color:var(--border2);
+    }
+    input[type="password"]::-ms-reveal,
+    input[type="password"]::-ms-clear{
+      display:none;
+    }
+    .login-btn{
+      width:100%;
+      padding:12px;
+      background:linear-gradient(135deg,var(--primary),var(--accent));
+      color:#fff;
+      border-radius:var(--radius-sm);
+      font-size:14px;
+      font-weight:700;
+      cursor:pointer;
+      transition:var(--trans);
+    }
+    .login-btn:hover{opacity:0.92;box-shadow:0 8px 24px rgba(59,130,246,0.3)}
+    .login-hint{font-size:12px;color:var(--text3);text-align:center;margin-top:8px}
+    .login-msg{
+      display:none;
+      padding:10px 12px;
+      border-radius:var(--radius-sm);
+      font-size:13px;
+      color:var(--text2);
+      border:1px solid rgba(255,255,255,0.1);
+      background:rgba(255,255,255,0.03);
+    }
+    .login-msg.show{display:block}
+    .login-msg.error{border-color:rgba(239,68,68,0.35);background:rgba(239,68,68,0.12);color:rgba(255,255,255,0.95)}
+
+    /* Sidebar */
+    .sidebar{
+      width:var(--sidebar-w);
+      min-height:100vh;
+      background:var(--bg2);
+      border-right:1px solid var(--border);
+      display:flex;
+      flex-direction:column;
+      position:fixed;
+      top:0;left:0;
+      z-index:100;
+      transition:transform 0.3s ease;
+    }
+    .sidebar-logo{
+      height:var(--topbar-h);
+      display:flex;align-items:center;
+      padding:0 20px;
+      border-bottom:1px solid var(--border);
+      gap:10px;
+    }
+    .logo-icon{
+      width:32px;height:32px;
+      background:linear-gradient(135deg,var(--primary),var(--accent));
+      border-radius:8px;
+      display:flex;align-items:center;justify-content:center;
+      font-size:16px;
+      flex-shrink:0;
+    }
+    .logo-text{
+      font-family:var(--font-display);
+      font-weight:800;font-size:15px;
+      letter-spacing:-0.3px;
+    }
+    .logo-text span{color:var(--primary)}
+    .sidebar-nav{flex:1;padding:16px 0;overflow-y:auto}
+    .nav-section{margin-bottom:8px}
+    .nav-label{
+      font-size:10px;font-weight:700;
+      letter-spacing:1.2px;text-transform:uppercase;
+      color:var(--text3);
+      padding:8px 20px 4px;
+    }
+    .nav-item{
+      display:flex;align-items:center;
+      gap:10px;padding:9px 20px;
+      color:var(--text2);
+      cursor:pointer;
+      border-radius:0;
+      transition:var(--trans);
+      position:relative;
+      font-size:13.5px;
+      font-weight:400;
+    }
+    .nav-item:hover{color:var(--text);background:rgba(255,255,255,0.04)}
+    .nav-item.active{color:var(--primary);background:rgba(59,130,246,0.08)}
+    .nav-item.active::before{
+      content:'';
+      position:absolute;left:0;top:50%;
+      transform:translateY(-50%);
+      width:3px;height:24px;
+      background:var(--primary);
+      border-radius:0 3px 3px 0;
+    }
+    .nav-icon{font-size:16px;width:20px;text-align:center;flex-shrink:0}
+    .nav-badge{
+      margin-left:auto;
+      background:var(--danger);
+      color:#fff;font-size:10px;font-weight:700;
+      padding:1px 6px;border-radius:10px;
+    }
+    .sidebar-footer{padding:16px;border-top:1px solid var(--border)}
+    .user-card{
+      display:flex;align-items:center;gap:10px;
+      padding:10px;border-radius:var(--radius-sm);
+      background:var(--surface);
+      cursor:pointer;
+      transition:var(--trans);
+    }
+    .user-card:hover{background:var(--surface2)}
+    .user-avatar{
+      width:32px;height:32px;border-radius:50%;
+      background:linear-gradient(135deg,#7c3aed,#3b82f6);
+      display:flex;align-items:center;justify-content:center;
+      font-size:13px;font-weight:800;flex-shrink:0;
+    }
+    .user-info{flex:1;min-width:0}
+    .user-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .user-role{font-size:11px;color:var(--text2)}
+
+    /* Main */
+    .main{
+      margin-left:var(--sidebar-w);
+      flex:1;
+      display:flex;flex-direction:column;
+      min-height:100vh;
+    }
+
+    /* Topbar */
+    .topbar{
+      height:var(--topbar-h);
+      background:var(--bg2);
+      border-bottom:1px solid var(--border);
+      display:flex;align-items:center;
+      padding:0 24px;
+      gap:16px;
+      position:sticky;top:0;z-index:90;
+      backdrop-filter:blur(8px);
+    }
+    .breadcrumb{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text2);flex:1}
+    .breadcrumb-sep{color:var(--text3)}
+    .breadcrumb-active{color:var(--text);font-weight:700}
+    .topbar-actions{display:flex;align-items:center;gap:8px;margin-left:auto}
+    .icon-btn{
+      width:36px;height:36px;border-radius:var(--radius-sm);
+      display:flex;align-items:center;justify-content:center;
+      color:var(--text2);transition:var(--trans);
+      position:relative;
+    }
+    .icon-btn:hover{background:var(--surface2);color:var(--text);transform:translateY(-1px)}
+    .icon-btn:active{transform:scale(0.94);}
+    .notif-dot{
+      position:absolute;top:6px;right:6px;
+      width:7px;height:7px;
+      background:var(--danger);
+      border-radius:50%;
+      border:2px solid var(--bg2);
+    }
+    .ws-status{
+      display:flex;align-items:center;gap:6px;
+      font-size:12px;color:var(--text2);
+      padding:4px 10px;
+      border-radius:20px;
+      background:var(--surface);
+      border:1px solid var(--border);
+    }
+    .ws-dot{width:7px;height:7px;border-radius:50%;background:var(--success);animation:pulse 2s infinite}
+    .realtime-dot{
+      display:inline-block;
+      width:8px;height:8px;border-radius:50%;
+      background:var(--success);
+      margin-right:6px;
+      animation:pulse 1.5s infinite;
+      vertical-align:middle;
+    }
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+    /* Page */
+    .page{display:none;flex:1;padding:24px;flex-direction:column;gap:20px}
+    .page.active{display:flex}
+    .page-header{
+      display:flex;align-items:flex-start;justify-content:space-between;
+      gap:16px;margin-bottom:8px;
+    }
+    .page-title{
+      font-family:var(--font-display);
+      font-size:24px;font-weight:700;
+      letter-spacing:-0.2px;
+    }
+    .page-subtitle{
+      font-size:13px;color:var(--text3);
+      margin-top:4px;
+    }
+
+    /* Components */
+    .btn{
+      display:inline-flex;align-items:center;gap:7px;
+      padding:8px 16px;border-radius:var(--radius-sm);
+      font-size:13px;font-weight:700;
+      transition:var(--trans);
+      cursor:pointer;
+      white-space:nowrap;
+      line-height:1;
+    }
+    .btn-primary{background:var(--primary);color:#fff}
+    .btn-primary:hover{background:#2563eb;box-shadow:0 0 20px var(--primary-glow)}
+    .btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border2)}
+    .btn-secondary:hover{background:var(--surface);border-color:var(--border2)}
+    .btn-danger{background:rgba(239,68,68,0.15);color:var(--danger);border:1px solid rgba(239,68,68,0.25)}
+    .btn-danger:hover{background:rgba(239,68,68,0.25)}
+    .btn-success{background:rgba(16,185,129,0.15);color:var(--success);border:1px solid rgba(16,185,129,0.2)}
+    .btn-success:hover{background:rgba(16,185,129,0.25)}
+    .btn:active{transform:scale(0.97);}
+    .btn-sm{padding:5px 12px;font-size:12px}
+
+    /* Badge */
+    .badge{
+      display:inline-flex;align-items:center;gap:5px;
+      padding:2px 9px;border-radius:20px;
+      font-size:11px;font-weight:800;
+      letter-spacing:0.2px;
+    }
+    .badge-online{background:rgba(16,185,129,0.15);color:var(--success);border:1px solid rgba(16,185,129,0.2)}
+    .badge-offline{background:rgba(15,23,42,0.05);color:var(--text3);border:1px solid var(--border)}
+    .badge-warning{background:rgba(245,158,11,0.15);color:var(--warning);border:1px solid rgba(245,158,11,0.2)}
+    .badge-danger{background:rgba(239,68,68,0.15);color:var(--danger);border:1px solid rgba(239,68,68,0.2)}
+    .badge-info{background:rgba(59,130,246,0.15);color:var(--primary);border:1px solid rgba(59,130,246,0.2)}
+    .badge-dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+
+    /* Card */
+    .card{
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:22px 22px 20px;
+    }
+    .card:hover{border-color:var(--border2);box-shadow:0 14px 30px rgba(0,0,0,0.45)}
+    .card-header{
+      display:flex;align-items:center;justify-content:space-between;
+      margin-bottom:16px;
+      gap:14px;
+    }
+    .card-title{
+      font-size:13px;font-weight:800;
+      color:var(--text2);
+      text-transform:uppercase;
+      letter-spacing:0.5px;
+    }
+
+    /* Summary Cards */
+    .summary-grid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:16px;
+    }
+    .summary-card{
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:20px;
+      display:flex;flex-direction:column;gap:8px;
+      transition:var(--trans);
+      cursor:default;
+    }
+    .summary-card:hover{border-color:var(--border2);transform:translateY(-2px)}
+    .summary-top{display:flex;align-items:flex-start;justify-content:space-between}
+    .summary-icon{
+      width:40px;height:40px;border-radius:10px;
+      display:flex;align-items:center;justify-content:center;
+      font-size:18px;flex-shrink:0;
+      background:rgba(59,130,246,0.15);
+    }
+    .summary-icon.blue{background:rgba(59,130,246,0.15)}
+    .summary-icon.green{background:rgba(16,185,129,0.15)}
+    .summary-icon.amber{background:rgba(245,158,11,0.15)}
+    .summary-icon.red{background:rgba(239,68,68,0.15)}
+    .summary-value{font-family:var(--font-display);font-size:28px;font-weight:800;line-height:1}
+    .summary-label{font-size:12px;color:var(--text2)}
+
+    /* Devices */
+    .devices-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+      gap:14px;
+    }
+    .device-card{
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:16px;
+      transition:var(--trans);
+      position:relative;
+      overflow:hidden;
+    }
+    .device-card:hover{border-color:var(--border2);transform:translateY(-2px)}
+    .device-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
+    .device-icon-wrap{
+      width:44px;height:44px;border-radius:10px;
+      background:var(--surface2);
+      display:flex;align-items:center;justify-content:center;
+      font-size:20px;
+    }
+    .device-name{font-size:13px;font-weight:700;margin-bottom:2px}
+    .device-room{font-size:11px;color:var(--text3)}
+    .device-controls{margin-top:12px;display:flex;flex-direction:column;gap:10px}
+
+    /* Toggle Switch */
+    .toggle-wrap{display:flex;align-items:center;justify-content:space-between}
+    .toggle-label{font-size:12px;color:var(--text2);font-weight:700}
+    .toggle{
+      width:40px;height:22px;
+      background:var(--surface2);
+      border-radius:11px;
+      position:relative;
+      cursor:pointer;
+      transition:background 0.2s ease;
+      border:1px solid var(--border2);
+      flex-shrink:0;
+    }
+    .toggle.on{background:var(--primary);border-color:var(--primary)}
+    .toggle::after{
+      content:'';
+      position:absolute;top:2px;left:2px;
+      width:16px;height:16px;
+      background:#fff;border-radius:50%;
+      transition:transform 0.2s ease;
+      box-shadow:0 1px 3px rgba(0,0,0,0.3);
+    }
+    .toggle.on::after{transform:translateX(18px)}
+
+    /* Table */
+    .table-wrap{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--border)}
+    table{width:100%;border-collapse:collapse}
+    thead{background:var(--surface2)}
+    th{
+      padding:10px 14px;text-align:left;
+      font-size:11px;font-weight:900;
+      color:var(--text2);
+      text-transform:uppercase;letter-spacing:0.5px;
+      border-bottom:1px solid var(--border);
+      white-space:nowrap;
+    }
+    td{
+      padding:12px 14px;
+      border-bottom:1px solid var(--border);
+      font-size:13px;
+    }
+    tbody tr:last-child td{border-bottom:none}
+    tbody tr:hover{background:rgba(255,255,255,0.02)}
+    .td-mono{font-family:var(--font-mono);font-size:12px;color:var(--text2)}
+
+    /* Sensor Display */
+    .sensor-metric{
+      background:var(--surface2);
+      border-radius:8px;
+      padding:10px;
+      text-align:center;
+      border:1px solid var(--border);
+    }
+    .sensor-val{
+      font-family:var(--font-display);
+      font-size:20px;font-weight:800;
+      line-height:1;margin-bottom:3px;
+    }
+    .sensor-unit{font-size:11px;color:var(--text3)}
+
+    /* Modal */
+    .modal-overlay{
+      position:fixed;inset:0;
+      background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);
+      z-index:10010;display:none;
+      align-items:center;justify-content:center;
+    }
+    .modal-overlay.open{display:flex}
+    .modal{
+      background:var(--surface);
+      border:1px solid var(--border2);
+      border-radius:16px;
+      padding:28px;
+      width:480px;
+      max-width:calc(100vw - 48px);
+      box-shadow:0 32px 64px rgba(0,0,0,0.5);
+      animation:modalIn 0.25s ease;
+    }
+    @keyframes modalIn{from{transform:scale(0.95);opacity:0}to{transform:scale(1);opacity:1}}
+    .modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+    .modal-title{font-family:var(--font-display);font-size:18px;font-weight:800}
+    .modal-close{color:var(--text2);font-size:20px;cursor:pointer;line-height:1;padding:4px}
+    .modal-close:hover{color:var(--text)}
+    .modal-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:20px}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .form-group.full{grid-column:1/-1}
+
+    /* Toast */
+    .toast-container{
+      position:fixed;bottom:24px;right:24px;
+      display:flex;flex-direction:column;gap:10px;
+      z-index:9999;pointer-events:none;
+    }
+    .toast{
+      background:linear-gradient(180deg, rgba(31,39,63,.98), rgba(25,32,52,.98));
+      border:1px solid rgba(255,255,255,.08);
+      border-left:4px solid var(--primary);
+      border-radius:14px;
+      padding:13px 16px;
+      display:flex;align-items:center;gap:12px;
+      min-width:300px;max-width:380px;
+      box-shadow:0 16px 36px rgba(0,0,0,.34);
+      pointer-events:auto;
+      animation:slideIn 0.3s ease;
+    }
+    @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+    @keyframes fadeOut{from{opacity:1}to{opacity:0;transform:translateX(100%)}}
+    .toast.leaving{animation:fadeOut 0.3s ease forwards}
+    .toast-icon{
+      width:30px;height:30px;flex-shrink:0;
+      border-radius:999px;
+      display:flex;align-items:center;justify-content:center;
+      font-size:14px;font-weight:900;
+      background:rgba(255,255,255,.06);
+      color:var(--text1);
+    }
+    .toast-msg{
+      font-size:14px;line-height:1.45;
+      color:var(--text1);
+      font-weight:600;
+      letter-spacing:.01em;
+    }
+    .toast.success .toast-icon{background:rgba(16,185,129,.16);color:#34d399}
+    .toast.error .toast-icon{background:rgba(239,68,68,.16);color:#fb7185}
+    .toast.warning .toast-icon{background:rgba(245,158,11,.18);color:#fbbf24}
+    .toast.info .toast-icon{background:rgba(59,130,246,.16);color:#60a5fa}
+    .toast.success{border-left:3px solid var(--success)}
+    .toast.error{border-left:3px solid var(--danger)}
+    .toast.warning{border-left:3px solid var(--warning)}
+    .toast.info{border-left:3px solid var(--primary)}
+
+    /* Scenes */
+    .scene-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+      gap:14px;
+    }
+    .scene-card{
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:20px;
+      cursor:pointer;
+      transition:var(--trans);
+      text-align:center;
+      position:relative;
+      overflow:hidden;
+    }
+    .scene-card:hover{border-color:var(--primary);background:rgba(59,130,246,0.05);transform:translateY(-2px)}
+    .scene-card.running{border-color:var(--success);background:rgba(16,185,129,0.05)}
+    .scene-emoji{font-size:36px;margin-bottom:10px;display:block}
+    .scene-name{font-size:14px;font-weight:800;margin-bottom:4px}
+    .scene-desc{font-size:11px;color:var(--text3);line-height:1.5}
+    .scene-actions{margin-top:12px;display:flex;gap:6px;justify-content:center}
+
+    /* Rooms */
+    .room-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+      gap:16px;
+    }
+    .room-card{
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:20px 22px;
+      transition:var(--trans);
+      cursor:pointer;
+    }
+    .room-card:hover{border-color:var(--primary);transform:translateY(-2px)}
+    .room-header{display:flex;align-items:center;gap:16px;margin-bottom:16px}
+    .room-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+    .room-icon{
+      width:56px;height:56px;border-radius:16px;
+      background:var(--surface2);
+      display:flex;align-items:center;justify-content:center;
+      font-size:26px;
+      flex-shrink:0;
+    }
+    .room-name{font-size:18px;font-weight:800}
+    .room-sub{font-size:13px;color:var(--text3);margin-top:4px}
+    .room-stats{display:flex;gap:14px;margin-top:14px;flex-wrap:wrap}
+    .room-stat{font-size:13px;color:var(--text2);display:flex;align-items:center;gap:8px}
+    .room-dot{width:7px;height:7px;border-radius:999px;display:inline-block}
+    .room-dot.online{background:#22c55e}
+    .room-dot.offline{background:#64748b}
+    .room-device-icons{margin-top:18px;display:flex;gap:10px;flex-wrap:wrap}
+    .room-device-chip{
+      width:28px;height:28px;border-radius:10px;
+      display:flex;align-items:center;justify-content:center;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.06);
+      font-size:18px;
+    }
+    .room-delete-btn{
+      height:32px;padding:0 12px;border-radius:10px;
+      font-size:12px;font-weight:800;
+    }
+
+    /* Dashboard activity blocks */
+    .scene-quick-list{display:flex;flex-direction:column;gap:8px}
+    .scene-quick-btn{
+      width:100%;
+      justify-content:flex-start;
+      font-weight:600;
+    }
+    .activity-grid{
+      display:grid;
+      grid-template-columns:280px 1fr;
+      gap:16px;
+      margin-top:4px;
+    }
+    .activity-table tbody td{vertical-align:middle}
+    .activity-device{
+      display:flex;align-items:center;gap:10px;
+    }
+    .activity-icon{
+      width:30px;height:30px;border-radius:8px;
+      background:var(--surface2);
+      display:flex;align-items:center;justify-content:center;
+      font-size:14px;flex-shrink:0;
+    }
+    .activity-name{font-weight:600}
+    .activity-sub{font-size:11px;color:var(--text3);line-height:1.2}
+    .chart-wrap{margin-top:2px}
+    .chart-bars{
+      display:flex;align-items:flex-end;
+      gap:4px;height:90px;
+    }
+    .chart-bar{
+      flex:1;border-radius:4px 4px 0 0;
+      background:rgba(59,130,246,0.28);
+      transition:var(--trans);
+      min-height:6px;
+    }
+    .chart-bar:hover{background:rgba(59,130,246,0.6)}
+    .chart-bar.highlight{background:var(--primary)}
+    .chart-labels{display:flex;justify-content:space-between;margin-top:8px}
+    .chart-label{font-size:10px;color:var(--text3);text-align:center;flex:1}
+
+    /* Notifications */
+    .notif-list{display:flex;flex-direction:column;gap:10px}
+    .notif-item{
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-left-width:3px;
+      border-radius:var(--radius);
+      padding:12px 14px;
+      display:flex;gap:10px;align-items:flex-start;
+    }
+    .notif-item.info{border-left-color:var(--primary)}
+    .notif-item.success{border-left-color:var(--success)}
+    .notif-item.warning{border-left-color:var(--warning)}
+    .notif-item.error{border-left-color:var(--danger)}
+    .notif-icon{font-size:16px}
+    .notif-title{font-size:13px;font-weight:700}
+    .notif-msg{font-size:12px;color:var(--text2);margin-top:2px}
+    .notif-time{font-size:11px;color:var(--text3);margin-top:4px}
+
+    /* MQTT */
+    .mqtt-layout{display:grid;grid-template-columns:1fr 340px;gap:16px}
+    .mqtt-topics{display:flex;flex-direction:column;gap:8px}
+    .mqtt-topic{
+      display:flex;justify-content:space-between;gap:8px;
+      border:1px solid var(--border);
+      background:var(--surface2);
+      border-radius:8px;padding:8px 10px;font-size:12px;
+    }
+    .stats-list{display:flex;flex-direction:column;gap:10px}
+    .stats-item{display:flex;justify-content:space-between;font-size:13px}
+
+    /* Schedule (minimal) */
+    .schedule-list{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+    .schedule-item{
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:14px 18px;
+      display:flex;align-items:center;gap:14px;
+    }
+    .schedule-time{
+      font-family:var(--font-display);
+      font-size:20px;font-weight:800;
+      color:var(--primary);min-width:92px;
+    }
+    .schedule-info{flex:1}
+    .schedule-name{font-size:13px;font-weight:800;margin-bottom:2px}
+    .schedule-meta{font-size:11px;color:var(--text3)}
+    .schedule-actions{display:flex;gap:8px;align-items:center}
+    .badge-pill{
+      display:inline-flex;align-items:center;justify-content:center;
+      padding:4px 10px;border-radius:999px;font-size:11px;
+      font-weight:800;
+      border:1px solid var(--border2);
+    }
+    .badge-pill.on{background:rgba(16,185,129,0.15);color:var(--success)}
+    .badge-pill.off{background:rgba(239,68,68,0.15);color:var(--danger)}
+
+    /* Responsive */
+    @media (max-width:1200px){.summary-grid{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width:768px){
+      .sidebar{transform:translateX(-100%)}
+      .sidebar.open{transform:translateX(0)}
+      .main{margin-left:0}
+      .summary-grid{grid-template-columns:1fr 1fr}
+      .form-grid{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <!-- LOGIN PAGE -->
+  <div class="login-page" id="loginPage">
+    <div class="login-box">
+      <div class="login-logo">
+        <div class="logo-icon">🏠</div>
+      </div>
+      <div class="login-title">SmartHome</div>
+      <div class="login-sub" data-i18n="login_subtitle">Nền tảng điều khiển</div>
+      <div class="login-form">
+        <div class="auth-panel active" id="authPanelLogin">
+          <div class="form-group">
+            <label class="form-label" data-i18n="login_email">Email / Tài khoản</label>
+            <input class="form-input" type="text" id="loginUsername" placeholder="Nhập tài khoản"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label" data-i18n="login_password">Mật khẩu</label>
+            <div class="password-field">
+              <input class="form-input" type="password" id="loginPassword" placeholder="Mật khẩu"/>
+              <button class="password-toggle" type="button" onclick="togglePasswordField('loginPassword', this)" aria-label="Hiện hoặc ẩn mật khẩu">👁</button>
+            </div>
+          </div>
+          <div class="login-msg error" id="loginMsg">Sai tài khoản hoặc mật khẩu</div>
+          <button class="login-btn" onclick="doLogin()" data-i18n="login_button">Đăng nhập</button>
+          <div class="login-actions">
+            <button class="login-link" type="button" id="loginToRegisterLink" onclick="setAuthMode('register')">Chưa có tài khoản? Tạo tài khoản</button>
+            <button class="login-link" type="button" id="loginToForgotLink" onclick="setAuthMode('forgot')">Quên mật khẩu?</button>
+          </div>
+        </div>
+        <div class="auth-panel" id="authPanelRegister">
+          <div class="auth-panel-head">
+            <div class="auth-panel-title" id="registerPanelTitle">Tạo tài khoản</div>
+            <div class="auth-panel-sub" id="registerPanelSub">Tạo tài khoản mới để đăng nhập và sử dụng hệ thống.</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" id="registerUsernameLabel">Tài khoản</label>
+            <input class="form-input" type="text" id="registerUsername" placeholder="Chọn tên tài khoản"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label" id="registerEmailLabel">Email</label>
+            <input class="form-input" type="email" id="registerEmail" placeholder="name@example.com"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label" id="registerPasswordLabel">Mật khẩu</label>
+            <div class="password-field">
+              <input class="form-input" type="password" id="registerPassword" placeholder="Tạo mật khẩu"/>
+              <button class="password-toggle" type="button" onclick="togglePasswordField('registerPassword', this)" aria-label="Hiện hoặc ẩn mật khẩu">👁</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" id="registerPasswordConfirmLabel">Nhập lại mật khẩu</label>
+            <div class="password-field">
+              <input class="form-input" type="password" id="registerPasswordConfirm" placeholder="Nhập lại mật khẩu"/>
+              <button class="password-toggle" type="button" onclick="togglePasswordField('registerPasswordConfirm', this)" aria-label="Hiện hoặc ẩn mật khẩu">👁</button>
+            </div>
+          </div>
+          <button class="login-btn" type="button" id="registerSubmitBtn" onclick="doRegister()">Tạo tài khoản</button>
+          <div class="login-actions">
+            <button class="login-link" type="button" id="registerToLoginLink" onclick="setAuthMode('login')">Đã có tài khoản? Đăng nhập</button>
+            <button class="login-link" type="button" id="registerToForgotLink" onclick="setAuthMode('forgot')">Quên mật khẩu?</button>
+          </div>
+        </div>
+        <div class="auth-panel" id="authPanelForgot">
+          <div class="auth-panel-head">
+            <div class="auth-panel-title" id="forgotPanelTitle">Quên mật khẩu</div>
+            <div class="auth-panel-sub" id="forgotPanelSub">Nhập tài khoản và tạo lại mật khẩu mới để tiếp tục đăng nhập.</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" id="forgotUsernameLabel">Tài khoản</label>
+            <input class="form-input" type="text" id="forgotUsername" placeholder="Nhập tài khoản"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label" id="forgotNewPasswordLabel">Mật khẩu mới</label>
+            <div class="password-field">
+              <input class="form-input" type="password" id="forgotNewPassword" placeholder="Nhập mật khẩu mới"/>
+              <button class="password-toggle" type="button" onclick="togglePasswordField('forgotNewPassword', this)" aria-label="Hiện hoặc ẩn mật khẩu">👁</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" id="forgotNewPasswordConfirmLabel">Nhập lại mật khẩu mới</label>
+            <div class="password-field">
+              <input class="form-input" type="password" id="forgotNewPasswordConfirm" placeholder="Xác nhận mật khẩu mới"/>
+              <button class="password-toggle" type="button" onclick="togglePasswordField('forgotNewPasswordConfirm', this)" aria-label="Hiện hoặc ẩn mật khẩu">👁</button>
+            </div>
+          </div>
+          <button class="login-btn" type="button" id="forgotSubmitBtn" onclick="doForgotPassword()">Đặt lại mật khẩu</button>
+          <div class="login-actions">
+            <button class="login-link" type="button" id="forgotToLoginLink" onclick="setAuthMode('login')">Quay lại đăng nhập</button>
+            <button class="login-link" type="button" id="forgotToRegisterLink" onclick="setAuthMode('register')">Tạo tài khoản mới</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <!-- APP SHELL -->
+  <div class="app-shell" id="appShell" style="display:none">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon">🏠</div>
+        <div class="logo-text">Smart<span>Home</span></div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">
+          <div class="nav-label" data-i18n="nav_overview">Tổng quan</div>
+          <div class="nav-item active" onclick="navigate('dashboard',this)">
+            <span class="nav-icon">⊞</span> Dashboard
+          </div>
+          <div class="nav-item" onclick="navigate('rooms',this)">
+            <span class="nav-icon">🏠</span> <span data-i18n="nav_rooms">Khu vực</span>
+          </div>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-label" data-i18n="nav_controls">Điều khiển</div>
+          <div class="nav-item" onclick="navigate('scenes',this)">
+            <span class="nav-icon">🎬</span> <span data-i18n="nav_scenes">Scene</span>
+          </div>
+          <div class="nav-item" onclick="navigate('schedules',this)">
+            <span class="nav-icon">⏱</span> <span data-i18n="nav_schedules">Lịch hẹn</span>
+          </div>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-label" data-i18n="nav_system">Hệ thống</div>
+          <div class="nav-item" onclick="navigate('notifications',this)">
+            <span class="nav-icon">🔔</span> <span data-i18n="nav_notifications">Thông báo</span>
+            <span class="nav-badge" id="notifBadge" style="display:none">0</span>
+          </div>
+          <div class="nav-item" onclick="navigate('mqtt',this)">
+            <span class="nav-icon">📡</span> <span data-i18n="nav_mqtt">Cấu hình MQTT</span>
+          </div>
+          <div class="nav-item" onclick="navigate('history',this)">
+            <span class="nav-icon">📋</span> <span data-i18n="nav_history">Nhật ký</span>
+          </div>
+          <div class="nav-item nav-admin" id="nav-users" onclick="navigate('users',this)">
+            <span class="nav-icon">👥</span> <span data-i18n="nav_users">Người dùng</span>
+          </div>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-card" onclick="openAccountModal()">
+          <div class="user-avatar" id="userAvatar">A</div>
+          <div class="user-info">
+            <div class="user-name" id="userName">admin</div>
+            <div class="user-role" id="userRole">Administrator</div>
+          </div>
+          <span style="color:var(--text3)">⚙</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+      <header class="topbar">
+        <div class="breadcrumb">
+          <span>SmartHome</span>
+          <span class="breadcrumb-sep"></span>
+          <span class="breadcrumb-active" id="breadcrumbActive">Dashboard</span>
+        </div>
+        <div class="topbar-actions">
+          <div class="ws-status">
+            <span class="ws-dot"></span>
+            <span id="realtimeLabel" data-i18n="top_realtime_label">Realtime</span>
+          </div>
+          <div class="icon-btn" id="btnLang" onclick="toggleLang()" title="Language">VI</div>
+          <div class="icon-btn" id="btnTheme" onclick="toggleTheme()" title="Theme">☾</div>
+          <div class="icon-btn" onclick="navigate('notifications')">🔔</div>
+          <div class="icon-btn" onclick="doLogout()">🚪</div>
+        </div>
+      </header>
+
+      <!-- Dashboard -->
+      <div class="page active" id="page-dashboard">
+        <div class="page-header">
+          <div>
+            <div class="page-title" data-i18n="page_dashboard_title">Dashboard</div>
+            <div class="page-subtitle"><span class="realtime-dot"></span><span data-i18n="page_dashboard_subtitle">Cập nhật realtime từ MQTT</span></div>
+          </div>
+          <button class="btn btn-primary" onclick="refreshNow()"><span aria-hidden="true">↻</span> <span data-i18n="btn_refresh">Làm mới</span></button>
+        </div>
+
+        <div class="summary-grid">
+          <div class="summary-card">
+            <div class="summary-top">
+              <div class="summary-icon blue">💡</div>
+              <span class="badge badge-info" data-i18n="summary_total_badge">Tổng</span>
+            </div>
+            <div class="summary-value" id="sumTotalDevices">--</div>
+            <div class="summary-label" data-i18n="summary_total_label">Thiết bị</div>
+          </div>
+
+          <div class="summary-card">
+            <div class="summary-top">
+              <div class="summary-icon green">✅</div>
+              <span class="badge badge-online" data-i18n="summary_active_badge"><span class="badge-dot"></span>Đang hoạt động</span>
+            </div>
+            <div class="summary-value" id="sumLightsOn">--</div>
+            <div class="summary-label" data-i18n="summary_lights_on_label">Đèn bật</div>
+          </div>
+
+          <div class="summary-card">
+            <div class="summary-top">
+              <div class="summary-icon amber">⚠️</div>
+              <span class="badge badge-warning" data-i18n="summary_status_badge">Trạng thái</span>
+            </div>
+            <div class="summary-value" id="sumDoorsOpen">--</div>
+            <div class="summary-label" data-i18n="summary_doors_open_label">Cửa đang mở</div>
+          </div>
+
+          <div class="summary-card">
+            <div class="summary-top">
+              <div class="summary-icon red">🚨</div>
+              <span class="badge badge-danger" id="gasBadge" data-i18n="summary_gas_danger_badge">Nguy hiểm</span>
+            </div>
+            <div class="summary-value" id="sumGasState">--</div>
+            <div class="summary-label" data-i18n="summary_gas_label">Khí Gas</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 360px;gap:16px;margin-top:16px">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title" data-i18n="card_environment_title">Môi trường</div>
+              <span class="badge badge-online"><span class="badge-dot"></span><span data-i18n="badge_live">Live</span></span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <div class="sensor-metric" style="background:var(--surface2)">
+                <div class="sensor-val" id="dashTemp" style="color:#f97316">--°C</div>
+                <div class="sensor-unit" data-i18n="sensor_temp_avg">Nhiệt độ trung bình</div>
+              </div>
+              <div class="sensor-metric" style="background:var(--surface2)">
+                <div class="sensor-val" id="dashHum" style="color:var(--accent)">--%</div>
+                <div class="sensor-unit" data-i18n="sensor_hum_avg">Độ ẩm trung bình</div>
+              </div>
+              <div class="sensor-metric" style="background:var(--surface2)">
+                <div class="sensor-val" id="dashGas" style="color:var(--warning)">--</div>
+                <div class="sensor-unit" data-i18n="sensor_gas_status">Trạng thái Gas</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Trạng thái thiết bị</div>
+              <span class="badge badge-info">Realtime</span>
+            </div>
+            <div id="deviceSnapshot" style="display:flex;flex-direction:column;gap:10px"></div>
+            <div style="margin-top:12px;font-size:12px;color:var(--text3)">
+              <span data-i18n="dashboard_tip">Mẹo: vào tab `Thiết bị` để bật/tắt cửa và đèn.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="activity-grid">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Scene nhanh</div>
+            </div>
+            <div class="scene-quick-list" id="quickScenesList"></div>
+          </div>
+
+          <div class="card" style="overflow:hidden">
+            <div class="card-header">
+              <div class="card-title">Hoạt động gần đây</div>
+            </div>
+            <div class="table-wrap" style="border:none">
+              <table class="activity-table">
+                <thead>
+                  <tr>
+                    <th>Thời gian</th>
+                    <th>Thiết bị</th>
+                    <th>Hành động</th>
+                    <th>Người thực hiện</th>
+                    <th>Trạng thái</th>
+                  </tr>
+                </thead>
+                <tbody id="activityTableBody">
+                  <tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text3)">Chưa có hoạt động</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="card chart-wrap">
+          <div class="card-header">
+            <div class="card-title">Lệnh điều khiển 24 giờ qua</div>
+            <span style="font-size:12px;color:var(--text3)" id="commandChartTotal">Tổng: 0 lệnh</span>
+          </div>
+          <div class="chart-bars" id="commandChartBars"></div>
+          <div class="chart-labels" id="commandChartLabels"></div>
+        </div>
+      </div>
+
+      <!-- Rooms -->
+      <div class="page" id="page-rooms">
+        <div class="page-header">
+          <div>
+            <div class="page-title" data-i18n="page_rooms_title">Rooms</div>
+            <div class="page-subtitle" id="roomsSubtitle">--</div>
+          </div>
+          <button class="btn btn-primary" onclick="openAddRoom()">
+            <span aria-hidden="true">+</span> <span data-i18n="rooms_add_btn">Add room</span>
+          </button>
+        </div>
+        <div id="roomsGrid" class="room-grid"></div>
+      </div>
+
+      <!-- Devices -->
+      <div class="page" id="page-devices">
+        <div class="page-header">
+          <div>
+            <div class="page-title" data-i18n="page_devices_title">All devices</div>
+            <div class="page-subtitle" id="devicesSubtitle">--</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <select class="form-input" style="width:auto;padding:7px 12px" id="filterDevices" onchange="renderDevices()">
+              <option value="">Tất cả loại</option>
+              <option value="door">Cửa/Khóa</option>
+              <option value="light">Đèn</option>
+            </select>
+            <button class="btn btn-primary" id="btnAddDevice" style="display:none" onclick="openAddDevice()">+ Thêm thiết bị</button>
+          </div>
+        </div>
+        <div class="devices-grid" id="devicesGrid"></div>
+      </div>
+
+      <!-- Scenes -->
+      <div class="page" id="page-scenes">
+        <div class="page-header">
+          <div>
+            <div class="page-title" data-i18n="page_scenes_title">Scene & Automation</div>
+            <div class="page-subtitle" data-i18n="page_scenes_subtitle">Demo UI: control devices with live data.</div>
+          </div>
+          <button class="btn btn-primary" onclick="openSceneModal()">
+            <span aria-hidden="true">+</span> <span id="sceneAddBtnLabel">Thêm scene</span>
+          </button>
+        </div>
+        <div class="scene-grid" id="sceneGrid"></div>
+      </div>
+
+      <!-- Schedules (local demo) -->
+      <div class="page" id="page-schedules">
+        <div class="page-header">
+          <div>
+            <div class="page-title" data-i18n="page_schedules_title">Schedules</div>
+            <div class="page-subtitle" data-i18n="page_schedules_subtitle">Local demo schedules with realtime toggle.</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+              <div class="card-title" data-i18n="schedule_create_title">Create schedule</div>
+              <span class="badge badge-info" data-i18n="schedule_badge_local">Local</span>
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label" data-i18n="schedule_device_label">Device</label>
+              <select class="form-input" id="scheduleDevice"></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" data-i18n="schedule_time_label">Time</label>
+              <input class="form-input" type="time" id="scheduleTime"/>
+            </div>
+            <div class="form-group" style="grid-column:1/-1">
+              <label class="form-label" data-i18n="schedule_action_label">Action</label>
+              <select class="form-input" id="scheduleAction">
+                <option value="ON" data-i18n="schedule_action_on">Turn on / Open</option>
+                <option value="OFF" data-i18n="schedule_action_off">Turn off / Close</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer" style="margin-top:16px">
+            <button class="btn btn-secondary" onclick="addSchedule()"><span aria-hidden="true">+</span> <span data-i18n="schedule_save_btn">Save schedule</span></button>
+          </div>
+
+          <div class="schedule-list" id="scheduleList"></div>
+        </div>
+      </div>
+
+      <!-- History -->
+      <div class="page" id="page-history">
+        <div class="page-header">
+          <div>
+            <div class="page-title" data-i18n="page_history_title">Sensor history</div>
+            <div class="page-subtitle" data-i18n="page_history_subtitle">Latest 100 records from the database.</div>
+          </div>
+          <button class="btn btn-secondary" onclick="loadHistory()"><span aria-hidden="true"></span> <span data-i18n="history_refresh_btn">Refresh</span></button>
+        </div>
+        <div class="card">
+          <div class="form-grid" style="margin-bottom:16px">
+            <div class="form-group">
+              <label class="form-label" id="historyDateLabel">Ngày</label>
+              <input class="form-input" type="date" id="historyDate"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label" id="historyFromTimeLabel">Từ thời điểm</label>
+              <input class="form-input" type="time" id="historyFromTime"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label" id="historyToTimeLabel">Đến thời điểm</label>
+              <input class="form-input" type="time" id="historyToTime"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label" id="historySensorTypeLabel">Loại cảm biến</label>
+              <select class="form-input" id="historySensorType">
+                <option value="">Tất cả</option>
+                <option value="temperature">Nhiệt độ</option>
+                <option value="humidity">Độ ẩm</option>
+                <option value="gas">Gas</option>
+              </select>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+            <button class="btn btn-secondary btn-sm" id="historyTodayBtn" onclick="applyHistoryQuickRange('today')">Hôm nay</button>
+            <button class="btn btn-secondary btn-sm" id="historyLastHourBtn" onclick="applyHistoryQuickRange('lastHour')">1 giờ gần nhất</button>
+            <button class="btn btn-secondary btn-sm" id="historyLast24HoursBtn" onclick="applyHistoryQuickRange('last24Hours')">24 giờ gần nhất</button>
+          </div>
+          <div style="display:flex;gap:8px;justify-content:flex-end;margin-bottom:16px;flex-wrap:wrap">
+            <button class="btn btn-secondary" id="historyExportBtn" onclick="exportHistoryCsv()">Xuất CSV</button>
+            <button class="btn btn-secondary" id="historyClearBtn" onclick="resetHistoryFilters()">Xóa bộ lọc</button>
+            <button class="btn btn-primary" id="historyLoadBtn" onclick="loadHistory()">Truy xuất dữ liệu</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th data-i18n="th_id">ID</th>
+                  <th data-i18n="th_type">Type</th>
+                  <th data-i18n="th_value">Value</th>
+                  <th data-i18n="th_time">Time</th>
+                </tr>
+              </thead>
+              <tbody id="historyTableBody">
+                <tr><td colspan="4" style="text-align:center;padding:28px;color:var(--text3)">Chưa có dữ liệu...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notifications -->
+      <div class="page" id="page-notifications">
+        <div class="page-header">
+          <div>
+            <div class="page-title" data-i18n="page_notifications_title">Notifications</div>
+            <div class="page-subtitle" id="notificationsSubtitle">--</div>
+          </div>
+          <button class="btn btn-secondary" id="btnMarkAllRead" onclick="markAllNotificationsRead()">
+              Đã đọc tất cả
+          </button>
+        </div>
+        <div class="card" id="adminNotifyCard" style="display:none">
+          <div class="card-header">
+            <div class="card-title" id="adminNotifyTitle">Admin broadcast</div>
+          </div>
+          <div class="form-grid">
+            <div class="form-group full">
+              <label class="form-label" id="notifyTitleLabel">Tiêu đề</label>
+              <input class="form-input" id="notifyTitle" placeholder="Example: System maintenance at 22:00"/>
+            </div>
+            <div class="form-group full">
+              <label class="form-label" id="notifyMessageLabel">Nội dung</label>
+              <textarea class="form-input" id="notifyMessage" rows="3" style="height:auto;padding:10px 12px" placeholder="Enter a broadcast message for all users"></textarea>
+            </div>
+          </div>
+          <div class="modal-footer" style="margin-top:10px">
+            <button class="btn btn-primary" id="sendAdminNotifyBtn" onclick="sendAdminNotification()">Gửi thông báo</button>
+          </div>
+        </div>
+        <div class="notif-list" id="notifList"></div>
+      </div>
+
+      <!-- MQTT -->
+      <div class="page" id="page-mqtt">
+        <div class="page-header">
+          <div>
+            <div class="page-title" data-i18n="page_mqtt_title">MQTT settings</div>
+            <div class="page-subtitle" id="mqttSubtitle">Connect and manage the broker</div>
+          </div>
+        </div>
+        <div class="mqtt-layout">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title" id="mqttBrokerTitle">MQTT Broker</div>
+              <span class="badge badge-online"><span class="badge-dot"></span><span id="mqttStatusLabel">Connected</span></span>
+            </div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label" id="mqttHostLabel">Host</label>
+                <input class="form-input" id="mqttHost" placeholder="emqx.local"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label" id="mqttPortLabel">Port</label>
+                <input class="form-input" id="mqttPort" placeholder="1883"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label" id="mqttUserLabel">Username</label>
+                <input class="form-input" id="mqttUser" placeholder="backend_service"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label" id="mqttPassLabel">Password</label>
+                <input class="form-input" id="mqttPass" type="password" placeholder="********"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label" id="mqttClientIdLabel">Client ID</label>
+                <input class="form-input" id="mqttClientId" placeholder="smarthome-backend-01"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label" id="mqttKeepAliveLabel">Keep Alive (s)</label>
+                <input class="form-input" id="mqttKeepAlive" placeholder="60"/>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-secondary" id="mqttTestBtn" onclick="testMqttConfig()">Test connection</button>
+              <button class="btn btn-primary" id="mqttSaveBtn" onclick="saveMqttConfig()">Save settings</button>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <div class="card">
+              <div class="card-header"><div class="card-title" id="mqttTopicTitle">Topic Convention</div></div>
+              <div class="mqtt-topics">
+                <div class="mqtt-topic"><span>home/{room}/{device}/set</span><span style="color:var(--text3)" id="mqttTopicCommand">Command</span></div>
+                <div class="mqtt-topic"><span>home/{room}/{device}/state</span><span style="color:var(--text3)" id="mqttTopicState">State</span></div>
+                <div class="mqtt-topic"><span>home/{room}/sensor/telemetry</span><span style="color:var(--text3)" id="mqttTopicSensor">Sensor</span></div>
+                <div class="mqtt-topic"><span>home/system/alerts</span><span style="color:var(--text3)" id="mqttTopicAlert">Alert</span></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header"><div class="card-title" id="mqttStatsTitle">Broker statistics</div></div>
+              <div class="stats-list">
+                <div class="stats-item"><span style="color:var(--text2)" id="mqttStatConnectionsLabel">Current connections</span><strong id="mqttStatConnections">0</strong></div>
+                <div class="stats-item"><span style="color:var(--text2)">Messages/s</span><strong id="mqttStatMps">0</strong></div>
+                <div class="stats-item"><span style="color:var(--text2)">Subscriptions</span><strong id="mqttStatSubs">0</strong></div>
+                <div class="stats-item"><span style="color:var(--text2)">Retained messages</span><strong id="mqttStatRetained">0</strong></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Users -->
+      <div class="page" id="page-users">
+        <div class="page-header">
+          <div>
+            <div class="page-title" data-i18n="page_users_title">Quản lý người dùng</div>
+            <div class="page-subtitle" id="usersSummary">0 tài khoản - phân quyền theo vai trò</div>
+          </div>
+          <button class="btn btn-primary" id="usersAddBtn" onclick="openUserModal()" style="display:none">+ Thêm người dùng</button>
+        </div>
+        <div class="card">
+          <div id="usersContainer"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- TOAST CONTAINER -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- ADD ROOM MODAL -->
+  <div class="modal-overlay" id="addRoomModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Thêm khu vực</div>
+        <button class="modal-close" onclick="closeModal('addRoomModal')">✕</button>
+      </div>
+      <div class="form-grid">
+        <div class="form-group full">
+          <label class="form-label">Tên khu vực</label>
+          <input class="form-input" id="roomName" placeholder="Ví dụ: Phòng làm việc"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tầng</label>
+          <input class="form-input" id="roomFloor" placeholder="Ví dụ: Tầng 2"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Icon</label>
+          <input class="form-input" id="roomIconInput" placeholder="🏠"/>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('addRoomModal')">Hủy</button>
+        <button class="btn btn-primary" onclick="saveRoom()">Thêm khu vực</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="sceneModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title" id="sceneModalTitle">Thêm scene</div>
+        <button class="modal-close" onclick="closeModal('sceneModal')">✕</button>
+      </div>
+      <div class="form-grid">
+        <div class="form-group full">
+          <label class="form-label" id="sceneNameLabel">Tên scene</label>
+          <input class="form-input" id="sceneName" placeholder="Ví dụ: Tiếp khách"/>
+        </div>
+        <div class="form-group full">
+          <label class="form-label" id="sceneDescriptionLabel">Mô tả</label>
+          <input class="form-input" id="sceneDescription" placeholder="Bật đèn, mở cửa"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label" id="sceneIconLabel">Icon</label>
+          <input class="form-input" id="sceneIcon" placeholder="🎬"/>
+        </div>
+        <div class="form-group full">
+          <label class="form-label" id="sceneDevicesLabel">Thiết bị trong scene</label>
+          <div id="sceneDevicesHint" style="font-size:12px;color:var(--text3);margin-bottom:8px">Tick hoặc bấm vào dòng thiết bị để thêm vào scene.</div>
+          <div id="sceneDeviceActions" style="display:flex;flex-direction:column;gap:10px"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-danger" id="sceneDeleteBtn" onclick="deleteCurrentScene()" style="display:none">Xóa</button>
+        <button class="btn btn-secondary" onclick="closeModal('sceneModal')">Hủy</button>
+        <button class="btn btn-primary" id="sceneSaveBtn" onclick="saveScene()">Lưu scene</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD DEVICE MODAL -->
+  <div class="modal-overlay" id="addDeviceModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title" data-i18n="add_device_modal_title">Thêm thiết bị mới</div>
+        <button class="modal-close" onclick="closeModal('addDeviceModal')">✕</button>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label" data-i18n="add_device_name_label">Tên thiết bị</label>
+          <input class="form-input" id="newDevName" placeholder="Ví dụ: Đèn phòng khách"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Khu vực</label>
+          <select class="form-input" id="newDevRoom"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" data-i18n="add_device_type_label">Loại thiết bị</label>
+          <select class="form-input" id="newDevType">
+            <option value="light" data-i18n="add_device_type_light">Đèn</option>
+            <option value="door" data-i18n="add_device_type_door">Cửa/Khóa</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('addDeviceModal')" data-i18n="add_device_cancel_btn">Hủy</button>
+        <button class="btn btn-primary" onclick="saveDevice()" data-i18n="add_device_confirm_btn">Thêm thiết bị</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="userModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title" id="userModalTitle">Thêm người dùng</div>
+        <button class="modal-close" onclick="closeModal('userModal')">✕</button>
+      </div>
+      <div class="form-grid">
+        <div class="form-group full">
+          <label class="form-label">Tài khoản</label>
+          <input class="form-input" id="userFormUsername" placeholder="Nhập tài khoản"/>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Email</label>
+          <input class="form-input" id="userFormEmail" placeholder="Nhập email"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Vai trò</label>
+          <select class="form-input" id="userFormRole">
+            <option value="admin">Admin</option>
+            <option value="operator">Operator</option>
+            <option value="viewer">Viewer</option>
+            <option value="user">User</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Trạng thái</label>
+          <select class="form-input" id="userFormActive">
+            <option value="1">Active</option>
+            <option value="0">Inactive</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Mật khẩu</label>
+          <input class="form-input" id="userFormPassword" type="password" placeholder="Nhập mật khẩu mới"/>
+        </div>
+      </div>
+      <div class="modal-footer" style="justify-content:space-between">
+        <button class="btn btn-danger" id="userDeleteBtn" onclick="deleteCurrentEditingUser()" style="display:none">Xóa người dùng</button>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-secondary" onclick="closeModal('userModal')">Hủy</button>
+          <button class="btn btn-primary" onclick="saveUser()">Lưu</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="accountModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Tài khoản của bạn</div>
+        <button class="modal-close" onclick="closeModal('accountModal')">✕</button>
+      </div>
+      <div class="form-grid">
+        <div class="form-group full">
+          <label class="form-label">Tài khoản</label>
+          <input class="form-input" id="accountUsername" readonly/>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Mật khẩu hiện tại</label>
+          <div class="password-field">
+            <input class="form-input" id="accountOldPassword" type="password" placeholder="Nhập mật khẩu hiện tại"/>
+            <button class="password-toggle" type="button" onclick="togglePasswordField('accountOldPassword', this)" aria-label="Hiện hoặc ẩn mật khẩu">👁</button>
+          </div>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Mật khẩu mới</label>
+          <div class="password-field">
+            <input class="form-input" id="accountNewPassword" type="password" placeholder="Nhập mật khẩu mới"/>
+            <button class="password-toggle" type="button" onclick="togglePasswordField('accountNewPassword', this)" aria-label="Hiện hoặc ẩn mật khẩu">👁</button>
+          </div>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Nhập lại mật khẩu mới</label>
+          <div class="password-field">
+            <input class="form-input" id="accountConfirmPassword" type="password" placeholder="Xác nhận mật khẩu mới"/>
+            <button class="password-toggle" type="button" onclick="togglePasswordField('accountConfirmPassword', this)" aria-label="Hiện hoặc ẩn mật khẩu">👁</button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('accountModal')">Đóng</button>
+        <button class="btn btn-primary" onclick="saveAccountPassword()">Cập nhật mật khẩu</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+  <script src="smarthome_ui.js"></script>
+</body>
+</html>
+
